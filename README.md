@@ -3,6 +3,9 @@
 Run in an iOS simulator (Make sure you have Xcode installed):  
 `npx repo run:ios`
 
+Run in an Android simulator (Make sure you have Android Studio installed):  
+`npx repo run:android`
+
 Run in a web browser:  
 `npx expo start --web`
 

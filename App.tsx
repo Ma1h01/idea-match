@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import RootLayout from './app/_layout';
 import { TamaguiProvider, View } from '@tamagui/core'
 import config from './tamagui.config'
 import { Text } from 'tamagui';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
+import { auth, firebase } from './app/firebase';
 
 export default function App() {
     const [loaded] = useFonts({
@@ -12,19 +12,28 @@ export default function App() {
       InterBold: require("@tamagui/font-inter/otf/Inter-Bold.otf"),
     });
 
-    useEffect(() => {
-      if (loaded) {
-        // can hide splash screen here
-      }
-    }, [loaded]);
+    const [user, setUser] = useState<any>(null);
 
-    if (!loaded) {
-      return null;
-    }
+    useEffect(() => {
+      // Check if Firebase is initialized
+      console.log("Firebase initialized:", auth().app.name ? "Yes" : "No");
+
+      // Anonymous Sign-in for testing Firebase Authentication
+      auth()
+        .signInAnonymously()
+        .then((userCredential) => {
+          console.log("Signed in anonymously:", userCredential.user);
+          setUser(userCredential.user);
+        })
+        .catch((error) => {
+          console.error("Error during anonymous sign-in:", error);
+        });
+    }, []);
   return (
     <TamaguiProvider config={config}>
-      <View width={200} height={200} backgroundColor="$background" />
-      <Text>Hello, world!</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        {user ? <Text>Signed in as: {user.uid}</Text> : <Text>Loading...</Text>}
+      </View>
     </TamaguiProvider>
   );
 }
