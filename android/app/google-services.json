@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "512234092524",
+    "project_id": "ideamatch-19429",
+    "storage_bucket": "ideamatch-19429.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:512234092524:android:2bb184645b41bbb00572c9",
+        "android_client_info": {
+          "package_name": "com.shay.idea_match"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJ4tgDIwIEU0VDEkH8BjFEy41YlZwKuJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
