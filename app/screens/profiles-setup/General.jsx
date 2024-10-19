@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, Image, Pressable, TouchableOpacity, 
 import { launchImageLibrary } from "react-native-image-picker";
 import { useNavigation } from '@react-navigation/native';
 const General = ({route}) => {
-  const { email, password } = route.params;
+  const { uid, email, password } = route.params;
   const nav = useNavigation();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
@@ -48,7 +48,7 @@ const General = ({route}) => {
         setErrorMessage("Please enter your bio.");        
       } else {
         console.log(name, bio, picture, role);
-        nav.navigate(`${role}Profile`, { email, password, name, bio, picture, role });
+        nav.navigate(`${role}Profile`, { uid, email, password, name, bio, picture, role });
         setTransition(false);
         return
       }
