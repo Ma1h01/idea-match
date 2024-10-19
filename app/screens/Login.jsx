@@ -14,24 +14,19 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState("");  
     const [showError, setShowError] = useState(false);
 
-    const handleTransition = async () => {
-      const ref = database().ref("users");
-      ref
-        .orderByChild("email")
-        .equalTo(email)
-        .on("value", (snapshot) => {
-          if (snapshot.exists()) {
-            nav.navigate("Home");
-          } else {
-            nav.navigate("GeneralProfile", { email, password });
-          }
-        });
+    const handleTransition = async (uid) => {
+      const snapshot = await database().ref(`/users/${uid}/roleProfile`).once("value");
+      if (snapshot.exists()) {
+        nav.navigate("Home", { uid });
+      } else {
+        nav.navigate("GeneralProfile", { uid, email, password });
+      }
     };
 
     const handleSignIn = async () => {
       try {
-        await auth().signInWithEmailAndPassword(email, password);
-        handleTransition();
+        const credentials = await auth().signInWithEmailAndPassword(email, password);
+        handleTransition(credentials.user.uid);
       } catch (error) {
         setErrorMessage(error.message);
         setShowError(true);

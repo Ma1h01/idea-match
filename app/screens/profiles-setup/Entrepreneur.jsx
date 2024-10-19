@@ -5,7 +5,7 @@ import MultiSelect from '../../components/MultiSelect';
 import { database } from '../../firebase/firebase';
 const Entrepreneur = ({route}) => {
   const nav = useNavigation();
-  const { email, password, name, bio, picture, role } = route.params;
+  const { uid, email, password, name, bio, picture, role } = route.params;
   const [idea, setIdea] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [suggestToOthers, setSuggestToOthers] = useState(false);
@@ -49,18 +49,21 @@ handleComplete = async () => {
       name: name,
       password: password,
       bio: bio,
-      picture: picture,
-      role: role,
-      idea: idea,
-      targetAudience: targetAudience,
-      suggestToOthers: suggestToOthers,
-      DoI: selectedDoI,
-      MoS: selectedMoS,
-      CL: selectedCL,
-      MI: selectedMI,
+      picture: picture,      
+      roleProfile: {
+        [role.toLowerCase()]: {
+          idea: idea,
+          targetAudience: targetAudience,
+          suggestToOthers: suggestToOthers,
+          DoI: selectedDoI,
+          MoS: selectedMoS,
+          CL: selectedCL,
+          MI: selectedMI,
+        },
+      },                                          
     };
-    const ref = database().ref("/users");
-    ref.push(newUser);
+    const ref = await database().ref(`/users/${uid}`).set(newUser); 
+    nav.navigate("Home", { uid });
   } catch (error) {
     console.error("Error writing document: ", error);
     if (otherExists) {
