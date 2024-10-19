@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { View, Text, StyleSheet, TextInput, ScrollView, Pressable } from 'react-native'
+import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import MultiSelect from '../../components/MultiSelect';
 import { database } from '../../firebase/firebase';
@@ -63,7 +63,7 @@ handleComplete = async () => {
       },                                          
     };
     const ref = await database().ref(`/users/${uid}`).set(newUser); 
-    nav.navigate("Home", { uid });
+    nav.navigate("MainTabs", { uid });
   } catch (error) {
     console.error("Error writing document: ", error);
     if (otherExists) {

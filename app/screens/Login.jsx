@@ -17,7 +17,7 @@ const Login = () => {
     const handleTransition = async (uid) => {
       const snapshot = await database().ref(`/users/${uid}/roleProfile`).once("value");
       if (snapshot.exists()) {
-        nav.navigate("Home", { uid });
+        nav.navigate("MainTabs", { uid });
       } else {
         nav.navigate("GeneralProfile", { uid, email, password });
       }
