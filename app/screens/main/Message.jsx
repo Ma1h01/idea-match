@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import NavigationBar from '../../components/NavigationBar';
 
-const HomeScreen = ({ navigation }) => {
+const Message = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Text>Home</Text>
-
+      <Text>Message</Text>
+      {/* Pass navigation prop explicitly to NavigationBar */}
+      
     </View>
   );
 };
@@ -20,5 +21,5 @@ const styles = StyleSheet.create({
   },
 });
 
+export default Message;
 
-export default HomeScreen;

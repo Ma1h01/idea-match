@@ -8,7 +8,7 @@ const General = ({route}) => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [picture, setPicture] = useState("");
-  const [role, setRole] = useState("");
+  const [roles, setRoles] = useState([]);
   const [transition, setTransition] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");  
   const [showError, setShowError] = useState(false);
@@ -32,11 +32,23 @@ const General = ({route}) => {
       }
     });
   }
+  const handleRoleToggle = (role) => {
+    setRoles((prevRoles) => {
+      if (prevRoles.includes(role)) {
+        return prevRoles.filter((r) => r !== role);
+      } else {
+        return [...prevRoles, role];
+      }
+    });
+    setTransition(true);
+  };
+
 
   const handleTransition = (role) => {
-    setRole(role);
+    // setRole(role);
     setTransition(true);
   }
+  
 
   useEffect(() => {
     if (transition) {
@@ -47,15 +59,17 @@ const General = ({route}) => {
       } else if (bio.trim() === "") {
         setErrorMessage("Please enter your bio.");        
       } else {
-        console.log(name, bio, picture, role);
-        nav.navigate(`${role}Profile`, { uid, email, password, name, bio, picture, role });
+        console.log(name, bio, picture, roles);
+        nav.navigate(`${roles[0]}Profile`, { uid, email, password, name, bio, picture, roles: [] });
         setTransition(false);
         return
       }
       setShowError(true);
       setTimeout(() => setShowError(false), 2000);
       setTransition(false);
-    }    
+    }  else {
+      setRoles([]);
+    }  
   }, [transition]);
 
   return (
@@ -102,7 +116,7 @@ const General = ({route}) => {
         <Text style={{ fontFamily: "Inter", color: "white" }}>I am a...</Text>
         <View style={{ flexDirection: "row" }}>
           <Pressable
-            onPress={() => handleTransition("Entrepreneur")}
+            onPress={() => handleRoleToggle("Entrepreneur")}
             style={{
               ...styles.button,
               borderTopLeftRadius: 10,
@@ -117,7 +131,7 @@ const General = ({route}) => {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => handleTransition("Developer")}
+            onPress={() => handleRoleToggle("Developer")}
             style={{
               ...styles.button,
               marginRight: -1,
@@ -128,7 +142,7 @@ const General = ({route}) => {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => handleTransition("Investor")}
+            onPress={() => handleRoleToggle("Investor")}
             style={{
               ...styles.button,
               borderTopRightRadius: 10,
@@ -144,6 +158,8 @@ const General = ({route}) => {
           </Pressable>
         </View>
       </View>
+
+      
 
       {showError && (
         <View style={styles.errorContainer}>
