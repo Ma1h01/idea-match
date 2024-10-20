@@ -5,7 +5,7 @@ import MultiSelect from '../../components/MultiSelect';
 import { database } from '../../firebase/firebase';
 const Developer = ({route}) => {
   const nav = useNavigation();
-  const { uid, email, password, name, bio, picture, role } = route.params;
+  const { uid, email, password, name, bio, picture, roles } = route.params;
   const [idea, setIdea] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [suggestToOthers, setSuggestToOthers] = useState(false);
@@ -18,6 +18,7 @@ const Developer = ({route}) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
   const [experienceFields, setExperienceFields] = useState([]);
+  const [userData, setUserData] = useState(null);
 
 const DoIOptions = [
   "Medicine", "Social Media", "Agriculture","Technology", "Finance", "Engineering", "Education", "Law"
@@ -38,34 +39,100 @@ const MIOptions = [
   "Equity Based", "Contract", "Freelance", "Revenue Sharing", "Other"
 ]
 
+ // Fetch user data when the component mounts
+ const fetchUserData = async () => {
+  try {
+    const userRef = database().ref(`/users/${uid}`);
+    const snapshot = await userRef.once('value');
+    if (snapshot.exists()) {
+      setUserData(snapshot.val()); // Set fetched data
+    }
+  } catch (error) {
+    console.error("Error fetching user data: ", error);
+  }
+};
+
+useEffect(() => {
+  fetchUserData(); // Fetch user data when the component mounts
+}, [uid]);
+
+
 handleComplete = async () => {
-  console.log("herererererererer")
-  console.log(`Email: ${email}, Password: ${password}, Name: ${name}, Bio: ${bio}, Picture: ${picture}, Role: ${role}, Experience: ${experienceFields}, Target Audience: ${targetAudience}, Suggest To Others: ${suggestToOthers}, DoI: ${selectedDoI}, MoS: ${selectedMoS}, CL: ${selectedCL}, MI: ${selectedMI}, MIOther: ${selectedMIOther}`);
+
+  const updatedRoles = [...roles, "developer"];
+  console.log("Updated Roles:", updatedRoles);
+
+  console.log("herererererer")
+  console.log(`Email: ${email}, Password: ${password}, Name: ${name}, Bio: ${bio}, Picture: ${picture}, Role: ${updatedRoles}, Experience: ${experienceFields}, Target Audience: ${targetAudience}, Suggest To Others: ${suggestToOthers}, DoI: ${selectedDoI}, MoS: ${selectedMoS}, CL: ${selectedCL}, MI: ${selectedMI}, MIOther: ${selectedMIOther}`);
   let otherExists = selectedMI.includes("Other");
   if (otherExists) {
     selectedMI.push(selectedMIOther);
   };
+
+
+
   try {
-    const newUser = {
-      email: email,
-      name: name,
-      password: password,
-      bio: bio,
-      picture: picture,      
-      roleProfile: {
-        [role.toLowerCase()]: {
-          experience: experienceFields,
-          targetAudience: targetAudience,
-          suggestToOthers: suggestToOthers,
-          DoI: selectedDoI,
-          MoS: selectedMoS,
-          CL: selectedCL,
-          MI: selectedMI,
+    const userRef = database().ref(`/users/${uid}`);
+
+    if (updatedRoles.length > 1) {
+
+      const updatedProfile = {
+        ...userData, // Include all existing user data
+        roleProfile: {
+          ...userData.roleProfile, // Merge the existing roleProfile to avoid overwriting other roles
+          [updatedRoles[updatedRoles.length - 1].toLowerCase()]: {
+            experienceFields,
+            targetAudience,
+            suggestToOthers,
+            DoI: selectedDoI,
+            MoS: selectedMoS,
+            CL: selectedCL,
+            MI: selectedMI,
+          },
         },
-      },                                          
-    };
-    const ref = await database().ref(`/users/${uid}`).set(newUser); 
-    nav.navigate("MainTabs", { uid });
+      };
+      // Update existing user in the database
+      await userRef.update(updatedProfile);
+      console.log("User updated successfully!");
+      nav.navigate("MainTabs", {screen: "Profile", 
+      params: {
+          uid, 
+          email, 
+          password, 
+          name, 
+          bio, 
+          picture, 
+          updatedRoles
+        }
+      });
+      
+    } else {
+      // Create a new user if roles array is empty
+      const newUser = {
+        email: email,
+        name: name,
+        password: password,
+        bio: bio,
+        picture: picture,
+        roleProfile: {
+          [updatedRoles[updatedRoles.length - 1].toLowerCase()]: {
+            experience: experienceFields,
+            targetAudience: targetAudience,
+            suggestToOthers: suggestToOthers,
+            DoI: selectedDoI,
+            MoS: selectedMoS,
+            CL: selectedCL,
+            MI: selectedMI,
+          },
+        },                                          
+      };
+
+      // Create a new user in the database
+      await userRef.set(newUser);
+      console.log("New user created successfully!");
+      nav.navigate("MainTabs", {uid, email, password, name, bio, picture, updatedRoles});
+    }
+
   } catch (error) {
     console.error("Error writing document: ", error);
     if (otherExists) {
@@ -73,6 +140,7 @@ handleComplete = async () => {
     }
   }
 }
+
 
 useEffect(() => {
   if (transition) {    
@@ -95,6 +163,11 @@ useEffect(() => {
   }    
 }, [transition])
 
+
+
+
+
+
 const addExperienceField = () => {
   setExperienceFields([...experienceFields, '']);
 };
@@ -106,26 +179,33 @@ const updateExperienceField = (text, index) => {
   setExperienceFields(updatedFields);
 };
 
+const removeExperienceField = (index) => {
+  setExperienceFields((prevFields) => prevFields.filter((_, i) => i !== index));
+};
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.container}>
-            {experienceFields.map((field, index) => (
-              <View key={index} style={styles.inputView}>
-                <TextInput
-                  style={styles.inputField}
-                  onChangeText={(text) => updateExperienceField(text, index)}
-                  value={field}
-                  placeholder={`Experience ${index + 1}`}
-                  placeholderTextColor="gray"
-                  multiline={true}
-                  numberOfLines={5}
-                />
-              </View>
-            ))}
-
-            <TouchableOpacity style={styles.button} onPress={addExperienceField}>
-              <Text style={styles.buttonText}>Add Experience</Text>
+        {experienceFields.map((field, index) => (
+          <View key={index} style={styles.inputView}>
+            <TextInput
+              style={styles.inputField}
+              onChangeText={(text) => updateExperienceField(text, index)}
+              value={field}
+              placeholder={`Experience ${index + 1}`}
+              placeholderTextColor="gray"
+              multiline={true}
+              numberOfLines={5}
+            />
+            <TouchableOpacity style={styles.removeButton} onPress={() => removeExperienceField(index)}>
+              <Text style={styles.buttonText}>Remove</Text>
             </TouchableOpacity>
+          </View>
+        ))}
+
+        <TouchableOpacity style={styles.button} onPress={addExperienceField}>
+          <Text style={styles.buttonText}>Add Experience</Text>
+        </TouchableOpacity>
       </View>
       <MultiSelect
         title={"Domain of Interest"}
@@ -293,7 +373,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff', // White text color
     fontSize: 16,
-    fontWeight: 'bold',
+  },
+  removeButton: {
+    marginLeft: 10,
+    padding: 10,
+    borderRadius: 5,
   },
 
 

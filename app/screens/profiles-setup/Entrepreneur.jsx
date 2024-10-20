@@ -1,11 +1,12 @@
 import React, {useState, useEffect} from 'react'
-import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, TouchableOpacity,ActivityIndicator } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import MultiSelect from '../../components/MultiSelect';
 import { database } from '../../firebase/firebase';
+import { Handle } from 'tamagui';
 const Entrepreneur = ({route}) => {
   const nav = useNavigation();
-  const { uid, email, password, name, bio, picture, role } = route.params;
+  const { uid, email, password, name, bio, picture, roles } = route.params;
   const [idea, setIdea] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [suggestToOthers, setSuggestToOthers] = useState(false);
@@ -17,6 +18,7 @@ const Entrepreneur = ({route}) => {
   const [transition, setTransition] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
+  const [userData, setUserData] = useState(null);
 
 const DoIOptions = [
   "Medicine", "Social Media", "Agriculture","Technology", "Finance", "Engineering", "Education", "Law"
@@ -37,33 +39,101 @@ const MIOptions = [
   "Equity Based", "Contract", "Freelance", "Revenue Sharing", "Other"
 ]
 
+
+ // Fetch user data when the component mounts
+ const fetchUserData = async () => {
+  try {
+    const userRef = database().ref(`/users/${uid}`);
+    const snapshot = await userRef.once('value');
+    if (snapshot.exists()) {
+      setUserData(snapshot.val()); // Set fetched data
+    }
+  } catch (error) {
+    console.error("Error fetching user data: ", error);
+  }
+};
+
+useEffect(() => {
+  fetchUserData(); // Fetch user data when the component mounts
+}, [uid]);
+
+
 handleComplete = async () => {
-  console.log(`Email: ${email}, Password: ${password}, Name: ${name}, Bio: ${bio}, Picture: ${picture}, Role: ${role}, Idea: ${idea}, Target Audience: ${targetAudience}, Suggest To Others: ${suggestToOthers}, DoI: ${selectedDoI}, MoS: ${selectedMoS}, CL: ${selectedCL}, MI: ${selectedMI}, MIOther: ${selectedMIOther}`);
+
+  const updatedRoles = [...roles, "entrepreneur"];
+  console.log("Updated Roles:", updatedRoles);
+
+  console.log("herererererer")
+  console.log(`Email: ${email}, Password: ${password}, Name: ${name}, Bio: ${bio}, Picture: ${picture}, Role: ${updatedRoles}, Idea: ${idea}, Target Audience: ${targetAudience}, Suggest To Others: ${suggestToOthers}, DoI: ${selectedDoI}, MoS: ${selectedMoS}, CL: ${selectedCL}, MI: ${selectedMI}, MIOther: ${selectedMIOther}`);
   let otherExists = selectedMI.includes("Other");
   if (otherExists) {
     selectedMI.push(selectedMIOther);
   };
+
+
+
   try {
-    const newUser = {
-      email: email,
-      name: name,
-      password: password,
-      bio: bio,
-      picture: picture,      
-      roleProfile: {
-        [role.toLowerCase()]: {
-          idea: idea,
-          targetAudience: targetAudience,
-          suggestToOthers: suggestToOthers,
-          DoI: selectedDoI,
-          MoS: selectedMoS,
-          CL: selectedCL,
-          MI: selectedMI,
+    const userRef = database().ref(`/users/${uid}`);
+
+    if (updatedRoles.length > 1) {
+
+      const updatedProfile = {
+        ...userData, // Include all existing user data
+        roleProfile: {
+          ...userData.roleProfile, // Merge the existing roleProfile to avoid overwriting other roles
+          [updatedRoles[updatedRoles.length - 1].toLowerCase()]: {
+            idea,
+            targetAudience,
+            suggestToOthers,
+            DoI: selectedDoI,
+            MoS: selectedMoS,
+            CL: selectedCL,
+            MI: selectedMI,
+          },
         },
-      },                                          
-    };
-    const ref = await database().ref(`/users/${uid}`).set(newUser); 
-    nav.navigate("MainTabs", { uid });
+      };
+      // Update existing user in the database
+      await userRef.update(updatedProfile);
+      console.log("User updated successfully!");
+      nav.navigate("MainTabs", {screen: "Profile", 
+      params: {
+          uid, 
+          email, 
+          password, 
+          name, 
+          bio, 
+          picture, 
+          updatedRoles
+        }
+      });
+      
+    } else {
+      // Create a new user if roles array is empty
+      const newUser = {
+        email: email,
+        name: name,
+        password: password,
+        bio: bio,
+        picture: picture,
+        roleProfile: {
+          [updatedRoles[updatedRoles.length - 1].toLowerCase()]: {
+            idea: idea,
+            targetAudience: targetAudience,
+            suggestToOthers: suggestToOthers,
+            DoI: selectedDoI,
+            MoS: selectedMoS,
+            CL: selectedCL,
+            MI: selectedMI,
+          },
+        },                                          
+      };
+
+      // Create a new user in the database
+      await userRef.set(newUser);
+      console.log("New user created successfully!");
+      nav.navigate("MainTabs", {uid, email, password, name, bio, picture, updatedRoles});
+    }
+
   } catch (error) {
     console.error("Error writing document: ", error);
     if (otherExists) {

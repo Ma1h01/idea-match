@@ -45,7 +45,9 @@ export default function App() {
         </View>
       );
     }
-    function MainTabs() {
+    function MainTabs({ route }) {
+      const { uid, email, password, name, bio, picture, roles } = route.params; // Destructure passed params
+    
       return (
           <Tab.Navigator
               screenOptions={({ route }) => ({
@@ -60,17 +62,22 @@ export default function App() {
                       }
                       return <Icon name={iconName} size={size} color={color} />;
                   },
-                  tabBarActiveTintColor: 'tomato',
+                  tabBarActiveTintColor: '#6F9595',
                   tabBarInactiveTintColor: 'gray',
                   tabBarStyle: { backgroundColor: '#2c2c2c' },
               })}
           >
               <Tab.Screen name="Home" component={Home} />
               <Tab.Screen name="Message" component={Message} />
-              <Tab.Screen name="Profile" component={Profile} />
+              <Tab.Screen
+                  name="Profile"
+                  component={Profile}
+                  initialParams={{ uid, email, password, name, bio, picture, roles }}
+              />
           </Tab.Navigator>
       );
-  }
+    }
+    
   return (
     <TamaguiProvider config={config}>
       <NavigationContainer>
